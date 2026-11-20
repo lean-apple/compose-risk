@@ -4,13 +4,21 @@ compose-risk measures whether AI reviewers can spot risk that only appears when 
 
 ## How it works
 
-A case holds its layers, an exploit that proves the risk, and a safe counterpart that differs in one file. The model reviews all layers at once, under a stated threat model, and returns a verdict with the layer that holds the root cause. Scores are compared against the case's expected answer and against baselines that ignore the code.
+A case comes in two versions: a vulnerable one with an exploit that proves the risk, and a fixed one that differs in one file. The model reviews all layers at once, under a stated threat model, and returns a verdict with the layer that holds the root cause. Scores are compared against the case's expected answer and against baselines that ignore the code.
 
 ## Cases
 
 | Case | Incident | Root cause |
 | --- | --- | --- |
-| `kelpdao-aave-2026` | KelpDAO rsETH bridge, April 2026 | one verifier is enough to deliver a message, two layers below the lending pool |
+| [`kelpdao-aave-2026`](cases/solidity/kelpdao-aave-2026) | KelpDAO rsETH bridge, April 2026 | one verifier is enough to deliver a message, two layers below the lending pool |
+
+## Usage
+
+Each version compiles on its own. Run its exploit with [Foundry](https://getfoundry.sh/):
+
+```
+FOUNDRY_SRC=cases/solidity/kelpdao-aave-2026/vulnerable/layers FOUNDRY_TEST=cases/solidity/kelpdao-aave-2026/vulnerable/exploit forge test
+```
 
 ## License
 

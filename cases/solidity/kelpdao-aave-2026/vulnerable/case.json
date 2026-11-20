@@ -1,0 +1,74 @@
+{
+  "id": "kelpdao-aave-2026",
+  "variant": "vulnerable",
+  "expected_verdict": "exploitable",
+  "threat_model": {
+    "attacker": {
+      "baseline": "permissionless",
+      "capital": "flash_loans",
+      "extra_powers": [
+        "Can cause one verifier of the message endpoint to attest arbitrary messages; this system represents that capability as control of one verifier key."
+      ],
+      "limits": [
+        "Cannot change governance decisions, contract configuration or deployed code."
+      ]
+    },
+    "trusted": [
+      "Governance sets the collateral price correctly for a fully backed token.",
+      "Contracts are deployed exactly as written, with the configuration in the source."
+    ],
+    "honest_parties": [
+      "Every other verifier is operated independently of the attacker's verifier, by a different entity on separate infrastructure, and attests only messages that match an actual event on the source chain."
+    ],
+    "environment": [
+      "The collateral price is set by governance; there is no oracle to manipulate."
+    ],
+    "excluded": [
+      "Bugs on the source chain or in its contracts.",
+      "More than one verifier compromised at once.",
+      "Governance compromise.",
+      "How the attacker obtains that verifier capability; only its effect, one verifier attesting arbitrary messages, is modelled.",
+      "Economic effects such as bank runs, and gas or denial-of-service griefing against these contracts."
+    ],
+    "property": "Given independently operated verifiers, no sequence of transactions by this attacker mints unbacked collateral or makes the protocol under review lose lender funds."
+  },
+  "incident_date": "2026-04-18",
+  "propagation_type": "composition",
+  "vuln_type": "unbacked_collateral",
+  "vuln_contract": "LendingPool",
+  "vuln_function": "borrow",
+  "root_cause": {
+    "layer": "2-upstream",
+    "file": "EndpointConfig.sol",
+    "detail": "the endpoint is deployed with one verifier and one required confirmation, so one compromised verifier can approve a forged message"
+  },
+  "assumptions_and_guarantees": {
+    "0-target": {
+      "assumes": "the collateral token is backed by ETH locked elsewhere"
+    },
+    "1-upstream": {
+      "assumes": "every delivered message is genuine",
+      "guarantees": "supply grows only through delivered messages"
+    },
+    "2-upstream": {
+      "guarantees": "a message is delivered after 1 of 1 verifier confirmations"
+    }
+  },
+  "propagation_path": [
+    "2-upstream: MessageEndpoint.deliver accepts a forged message with one confirmation",
+    "1-upstream: BridgedRestakeToken.receiveMessage mints tokens with nothing locked behind them",
+    "0-target: LendingPool.borrow lends real ETH against the unbacked tokens",
+    "0-target: LendingPool.withdrawEth reverts for honest lenders once liquidity is gone"
+  ],
+  "code_hops_from_root_cause": 2,
+  "exploit_check": "exploit/Exploit.t.sol",
+  "expected_reviewer_finding": "The pool accepts a bridged token as collateral whose minting depends on a single-verifier message check two dependencies upstream; forged mints let an attacker borrow all lender liquidity.",
+  "simplifications": [
+    "One endpoint with a confirmation threshold instead of real cross-chain messaging and token-bridge code",
+    "Collateral price set by governance instead of an exchange-rate oracle",
+    "No interest, liquidation or multi-asset pools; stablecoin-pool withdrawals are not modelled",
+    "Amounts are illustrative, not the incident's",
+    "The attacker's capability is modelled as a controlled verifier key. LayerZero's incident report describes tampered RPC responses and a denial of service on an external RPC provider that led the single verifier to attest a forged message; that upstream compromise is abstracted away (https://layerzero.network/blog/layerzero-labs-kelpdao-incident-report).",
+    "The mock token mints new tokens when a message is delivered. In the incident the Ethereum-side adapter released existing rsETH without a matching burn on the source chain, leaving remote-chain claims under-backed, so the backing deficit arose in the adapter's locked balance rather than through new supply (https://governance.aave.com/t/rseth-incident-report-april-20-2026/24580)."
+  ]
+}

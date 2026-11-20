@@ -1,0 +1,42 @@
+{
+  "id": "kelpdao-aave-2026",
+  "variant": "fixed",
+  "expected_verdict": "not_exploitable",
+  "threat_model": {
+    "attacker": {
+      "baseline": "permissionless",
+      "capital": "flash_loans",
+      "extra_powers": [
+        "Can cause one verifier of the message endpoint to attest arbitrary messages; this system represents that capability as control of one verifier key."
+      ],
+      "limits": [
+        "Cannot change governance decisions, contract configuration or deployed code."
+      ]
+    },
+    "trusted": [
+      "Governance sets the collateral price correctly for a fully backed token.",
+      "Contracts are deployed exactly as written, with the configuration in the source."
+    ],
+    "honest_parties": [
+      "Every other verifier is operated independently of the attacker's verifier, by a different entity on separate infrastructure, and attests only messages that match an actual event on the source chain."
+    ],
+    "environment": [
+      "The collateral price is set by governance; there is no oracle to manipulate."
+    ],
+    "excluded": [
+      "Bugs on the source chain or in its contracts.",
+      "More than one verifier compromised at once.",
+      "Governance compromise.",
+      "How the attacker obtains that verifier capability; only its effect, one verifier attesting arbitrary messages, is modelled.",
+      "Economic effects such as bank runs, and gas or denial-of-service griefing against these contracts."
+    ],
+    "property": "Given independently operated verifiers, no sequence of transactions by this attacker mints unbacked collateral or makes the protocol under review lose lender funds."
+  },
+  "difference": {
+    "layer": "2-upstream",
+    "file": "EndpointConfig.sol",
+    "detail": "two verifiers and two required confirmations instead of one of one"
+  },
+  "exploit_check": "exploit/Exploit.t.sol",
+  "expected_reviewer_finding": "No exploitable risk: minting requires two independent verifier confirmations, so one compromised verifier cannot forge collateral."
+}
