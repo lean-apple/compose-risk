@@ -10,7 +10,16 @@ A case holds its layers, an exploit that proves the risk, and a safe counterpart
 
 | Case | Incident | Root cause |
 | --- | --- | --- |
-| `kelpdao-aave-2026` | KelpDAO rsETH bridge, April 2026 | one verifier is enough to deliver a message, two layers below the lending pool |
+| [`kelpdao-aave-2026`](cases/solidity/kelpdao-aave-2026) | KelpDAO rsETH bridge, April 2026 | one verifier is enough to deliver a message, two layers below the lending pool |
+| [`kelpdao-aave-2026-safe`](cases/solidity/kelpdao-aave-2026-safe) | safe counterpart | two independent verifiers are required |
+
+## Usage
+
+Each case compiles on its own. Run its exploit with [Foundry](https://getfoundry.sh/):
+
+```
+FOUNDRY_SRC=cases/solidity/kelpdao-aave-2026/layers FOUNDRY_TEST=cases/solidity/kelpdao-aave-2026/exploit forge test
+```
 
 ## License
 
