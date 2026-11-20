@@ -82,7 +82,7 @@ class FixedCase(_Strict):
 
 Case = VulnerableCase | FixedCase
 
-_CASE = TypeAdapter(Annotated[Case, Field(discriminator="variant")])
+_CASE: TypeAdapter[Case] = TypeAdapter(Annotated[Case, Field(discriminator="variant")])
 
 
 class CaseError(Exception):

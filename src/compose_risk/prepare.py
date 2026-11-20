@@ -17,7 +17,8 @@ def _comment_spans(source: bytes) -> list[tuple[int, int]]:
     tree = _PARSER.parse(source)
     if tree.root_node.has_error:
         raise ParseError("source does not parse as Solidity")
-    spans, stack = [], [tree.root_node]
+    spans: list[tuple[int, int]] = []
+    stack = [tree.root_node]
     while stack:
         node = stack.pop()
         if node.type == "comment":
@@ -30,7 +31,8 @@ def _comment_spans(source: bytes) -> list[tuple[int, int]]:
 def strip_comments(source: str) -> str:
     """Removes comments from Solidity source; string literals are left intact."""
     data = source.encode()
-    out, pos = [], 0
+    out: list[bytes] = []
+    pos = 0
     for start, end in _comment_spans(data):
         out.append(data[pos:start])
         # Keeps the comment's line breaks, or one space, so the tokens around it stay apart.
@@ -52,12 +54,23 @@ def prepare_version(version_dir: Path, out_dir: Path) -> Path:
     """Writes `out_dir/layers/` with every layer contract of `version_dir`, comments stripped.
 
     Only `layers/` is copied: the exploit and `case.json` hold the answer. An existing `out_dir` is replaced.
+    Invalid paths, missing contracts, and parse errors are rejected before replacing output.
     """
+    if version_dir.resolve().is_relative_to(out_dir.resolve()):
+        raise ValueError("output directory must not equal or contain the source version directory")
+    if not version_dir.is_dir():
+        raise NotADirectoryError(f"source version directory does not exist or is not a directory: {version_dir}")
+    layers = version_dir / "layers"
+    if not layers.is_dir():
+        raise NotADirectoryError(f"source layers directory does not exist or is not a directory: {layers}")
+    sources = sorted(source for source in layers.rglob("*.sol") if source.is_file())
+    if not sources:
+        raise ValueError(f"no Solidity contracts found in {layers}")
+    contracts = [(source.relative_to(layers), strip_comments(source.read_text())) for source in sources]
     if out_dir.exists():
         shutil.rmtree(out_dir)
-    layers = version_dir / "layers"
-    for source in sorted(layers.rglob("*.sol")):
-        target = out_dir / "layers" / source.relative_to(layers)
+    for relative_path, content in contracts:
+        target = out_dir / "layers" / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(strip_comments(source.read_text()))
+        target.write_text(content)
     return out_dir

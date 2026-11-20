@@ -24,6 +24,7 @@ Check the cases, the review input and the scoring with [uv](https://docs.astral.
 
 ```
 uv run pytest
+uv run mypy
 ```
 
 ## License
