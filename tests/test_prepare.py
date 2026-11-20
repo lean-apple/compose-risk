@@ -75,7 +75,7 @@ def _write(root: Path, files: dict[str, str]) -> None:
         pytest.param(
             {"layers/A.sol": "contract A {}", "layers/B.sol": "contract B {"},
             ParseError,
-            "does not parse",
+            r"B\.sol: source does not parse",
             id="invalid",
         ),
     ],

@@ -50,6 +50,13 @@ def comment_count(source: str) -> int:
     return len(_comment_spans(source.encode()))
 
 
+def _stripped(source: Path) -> str:
+    try:
+        return strip_comments(source.read_text())
+    except ParseError as e:
+        raise ParseError(f"{source}: {e}") from e
+
+
 def prepare_version(version_dir: Path, out_dir: Path) -> Path:
     """Writes `out_dir/layers/` with every layer contract of `version_dir`, comments stripped.
 
@@ -63,7 +70,7 @@ def prepare_version(version_dir: Path, out_dir: Path) -> Path:
     sources = sorted(source for source in layers.rglob("*.sol") if source.is_file())
     if not sources:
         raise FileNotFoundError(f"no Solidity contracts found in {layers}")
-    contracts = [(source.relative_to(layers), strip_comments(source.read_text())) for source in sources]
+    contracts = [(source.relative_to(layers), _stripped(source)) for source in sources]
     if out_dir.exists():
         shutil.rmtree(out_dir)
     for relative_path, content in contracts:
