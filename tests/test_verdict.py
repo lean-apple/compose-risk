@@ -4,7 +4,7 @@ from typing import Literal
 import pytest
 
 from compose_risk.case import Case, VulnerableCase, find_version_dirs, load_case
-from compose_risk.verdict import ReviewVerdict, score
+from compose_risk.verdict import ReviewVerdict, layer_name, score
 
 
 @pytest.fixture(scope="module")
@@ -38,3 +38,10 @@ def test_wrong_layer_is_not_credited(version_dir: Path) -> None:
 def test_constant_reviewers_do_not_score_perfectly(cases: list[Case]) -> None:
     for constant in ("exploitable", "not_exploitable"):
         assert not all(score(_verdict(constant, _root_layer(c)), c).verdict_correct for c in cases)
+
+
+@pytest.mark.parametrize(
+    "answer", ["2-upstream", " 2-upstream ", "2-upstream/", "layers/2-upstream", "layers/2-upstream/EndpointConfig.sol"]
+)
+def test_layer_name_reads_the_folder(answer: str) -> None:
+    assert layer_name(answer) == "2-upstream"

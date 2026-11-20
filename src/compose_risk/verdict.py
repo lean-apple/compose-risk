@@ -27,10 +27,15 @@ class Scores:
     root_cause_layer_correct: bool | None
 
 
+def layer_name(answer: str) -> str:
+    """The layer folder an answer names, so `" layers/2-upstream/EndpointConfig.sol"` reads as `2-upstream`."""
+    return answer.strip().removeprefix("layers/").split("/")[0].strip()
+
+
 def score(verdict: ReviewVerdict, case: Case) -> Scores:
     """A vulnerable version must be flagged with the right layer; a fixed version must be left alone."""
     verdict_correct = verdict.verdict == case.expected_verdict
     if isinstance(case, FixedCase):
         return Scores(verdict_correct=verdict_correct, root_cause_layer_correct=None)
-    layer_correct = verdict_correct and verdict.root_cause_layer == case.root_cause.layer
+    layer_correct = verdict_correct and layer_name(verdict.root_cause_layer) == case.root_cause.layer
     return Scores(verdict_correct=verdict_correct, root_cause_layer_correct=layer_correct)
