@@ -20,6 +20,13 @@ Each version compiles on its own. Run its exploit with [Foundry](https://getfoun
 FOUNDRY_SRC=cases/solidity/kelpdao-aave-2026/vulnerable/layers FOUNDRY_TEST=cases/solidity/kelpdao-aave-2026/vulnerable/exploit forge test
 ```
 
+Check the cases, the review input and the scoring with [uv](https://docs.astral.sh/uv/):
+
+```
+uv run pytest
+uv run mypy
+```
+
 ## License
 
 Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT license](LICENSE-MIT), at your option.
