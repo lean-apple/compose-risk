@@ -57,23 +57,31 @@ def _stripped(source: Path) -> str:
         raise ParseError(f"{source}: {e}") from e
 
 
-def prepare_version(version_dir: Path, out_dir: Path) -> Path:
-    """Writes `out_dir/layers/` with every layer contract of `version_dir`, comments stripped.
+def read_layers(version_dir: Path) -> dict[str, str]:
+    """Every layer contract of `version_dir`, comments stripped, keyed by its path under `layers/`.
 
-    Only `layers/` is copied: the exploit and `case.json` hold the answer. An existing `out_dir` is replaced.
-    Every contract is read and parsed first, so an invalid source leaves the existing output untouched.
+    Only `layers/` is read: the exploit and `case.json` hold the answer.
     """
-    source_dir, target_dir = version_dir.resolve(), out_dir.resolve()
-    if source_dir.is_relative_to(target_dir) or target_dir.is_relative_to(source_dir):
-        raise ValueError("output directory must not overlap the source version directory")
     layers = version_dir / "layers"
     sources = sorted(source for source in layers.rglob("*.sol") if source.is_file())
     if not sources:
         raise FileNotFoundError(f"no Solidity contracts found in {layers}")
-    contracts = [(source.relative_to(layers), _stripped(source)) for source in sources]
+    return {source.relative_to(layers).as_posix(): _stripped(source) for source in sources}
+
+
+def prepare_version(version_dir: Path, out_dir: Path) -> Path:
+    """Writes `out_dir/layers/` with what `read_layers` returns, to inspect what a reviewer reads.
+
+    An existing `out_dir` is replaced. Every contract is read and parsed first, so an invalid source leaves the
+    existing output untouched.
+    """
+    source_dir, target_dir = version_dir.resolve(), out_dir.resolve()
+    if source_dir.is_relative_to(target_dir) or target_dir.is_relative_to(source_dir):
+        raise ValueError("output directory must not overlap the source version directory")
+    contracts = read_layers(version_dir)
     if out_dir.exists():
         shutil.rmtree(out_dir)
-    for relative_path, content in contracts:
+    for relative_path, content in contracts.items():
         target = out_dir / "layers" / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")
