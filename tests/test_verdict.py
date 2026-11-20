@@ -1,10 +1,9 @@
 from pathlib import Path
 
-from compose_risk.case import VulnerableCase, load_case
+from compose_risk.case import VulnerableCase, find_version_dirs, load_case
 from compose_risk.verdict import ReviewVerdict, score
-from tests.conftest import VERSION_DIRS
 
-CASES = [load_case(d) for d in VERSION_DIRS]
+CASES = [load_case(d) for d in find_version_dirs()]
 
 
 def _verdict(verdict: str, layer: str = "") -> ReviewVerdict:

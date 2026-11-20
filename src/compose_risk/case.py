@@ -5,6 +5,9 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
+CASES_DIR = Path(__file__).resolve().parents[2] / "cases"
+VARIANTS = ("vulnerable", "fixed")
+
 # Shared attacker vocabulary, so cases from different protocols state the same baseline the same way.
 BASELINE_POWERS = {
     "permissionless": "Can call any public or external function, deploy contracts, and order its own transactions.",
@@ -87,6 +90,16 @@ _CASE: TypeAdapter[Case] = TypeAdapter(Annotated[Case, Field(discriminator="vari
 
 class CaseError(Exception):
     pass
+
+
+def find_case_dirs(root: Path = CASES_DIR) -> list[Path]:
+    """Every case folder, `<root>/<ecosystem>/<case>/`, that holds at least one version."""
+    return sorted(d for d in root.glob("*/*") if any((d / variant).is_dir() for variant in VARIANTS))
+
+
+def find_version_dirs(root: Path = CASES_DIR) -> list[Path]:
+    """Every version folder, `<root>/<ecosystem>/<case>/<variant>/`."""
+    return [d / variant for d in find_case_dirs(root) for variant in VARIANTS if (d / variant).is_dir()]
 
 
 def load_case(version_dir: Path) -> Case:
