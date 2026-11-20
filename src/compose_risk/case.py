@@ -103,6 +103,11 @@ def find_version_dirs(root: Path = CASES_DIR) -> list[Path]:
     return [d / variant for d in find_case_dirs(root) for variant in VARIANTS if (d / variant).is_dir()]
 
 
+def parse_case(data: object) -> Case:
+    """Validates an already-loaded `case.json` object, such as the copy stored with a sample."""
+    return _CASE.validate_python(data)
+
+
 def load_case(version_dir: Path) -> Case:
     """Reads `<case>/<variant>/case.json`, validates it, and checks that every file it names exists.
 

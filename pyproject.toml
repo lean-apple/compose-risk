@@ -5,9 +5,14 @@ description = "Evals for risk that only appears when contracts are combined"
 license = "MIT OR Apache-2.0"
 requires-python = ">=3.12"
 dependencies = [
+    "anyio>=4.16.0",
+    "inspect-ai>=0.3.291",
     "pydantic>=2",
     "tree-sitter-language-pack>=1.25",
 ]
+
+[project.entry-points.inspect_ai]
+compose_risk = "compose_risk._registry"
 
 [dependency-groups]
 dev = [
