@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from compose_risk.case import CaseError, find_version_dirs, load_case
+from compose_risk.case import CaseError, check_pair, find_case_dirs, find_version_dirs, load_case
 
 
 def test_every_case_loads(version_dir: Path):
@@ -34,3 +34,43 @@ def test_finds_every_version(tmp_path: Path):
     (tmp_path / "solidity" / "not-a-case").mkdir()
     found = [str(d.relative_to(tmp_path)) for d in find_version_dirs(tmp_path)]
     assert found == ["solidity/a/vulnerable", "solidity/a/fixed", "solidity/b/vulnerable"]
+
+
+@pytest.fixture(params=find_case_dirs(), ids=lambda d: d.name)
+def case_dir(request: pytest.FixtureRequest) -> Path:
+    return request.param
+
+
+def test_every_case_is_a_controlled_pair(case_dir: Path):
+    check_pair(case_dir)
+
+
+def _copy(case_dir: Path, tmp_path: Path) -> Path:
+    copy = tmp_path / case_dir.name
+    shutil.copytree(case_dir, copy)
+    return copy
+
+
+def test_pair_rejects_a_second_changed_contract(case_dir: Path, tmp_path: Path):
+    copy = _copy(case_dir, tmp_path)
+    contract = next((copy / "fixed" / "layers").rglob("*.sol"))
+    contract.write_text(contract.read_text() + "\n// drift\n")
+    with pytest.raises(CaseError, match="expected only"):
+        check_pair(copy)
+
+
+def test_pair_rejects_different_threat_models(case_dir: Path, tmp_path: Path):
+    copy = _copy(case_dir, tmp_path)
+    path = copy / "fixed" / "case.json"
+    data = json.loads(path.read_text())
+    data["threat_model"]["property"] += " Changed."
+    path.write_text(json.dumps(data))
+    with pytest.raises(CaseError, match="threat models differ"):
+        check_pair(copy)
+
+
+def test_pair_rejects_a_missing_version(case_dir: Path, tmp_path: Path):
+    copy = _copy(case_dir, tmp_path)
+    shutil.rmtree(copy / "vulnerable")
+    with pytest.raises(CaseError, match="missing vulnerable/"):
+        check_pair(copy)

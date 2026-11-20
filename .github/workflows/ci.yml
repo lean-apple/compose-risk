@@ -25,9 +25,6 @@ jobs:
             echo "::endgroup::"
           done
 
-      - name: Versions form a controlled pair
-        run: python3 scripts/check_versions.py
-
   python:
     runs-on: ubuntu-latest
     steps:
