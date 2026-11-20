@@ -86,3 +86,11 @@ def test_invalid_case_json_is_a_case_error(version_dir: Path, tmp_path: Path) ->
     (copy / "case.json").unlink()
     with pytest.raises(CaseError, match="case.json"):
         load_case(copy)
+
+
+def test_variant_must_match_folder(version_dir: Path, tmp_path: Path) -> None:
+    other = "fixed" if version_dir.name == "vulnerable" else "vulnerable"
+    copy = tmp_path / version_dir.parent.name / other
+    shutil.copytree(version_dir, copy)
+    with pytest.raises(CaseError, match="expected the version folder name"):
+        load_case(copy)
