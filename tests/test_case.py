@@ -74,3 +74,14 @@ def test_pair_rejects_a_missing_version(case_dir: Path, tmp_path: Path):
     shutil.rmtree(copy / "vulnerable")
     with pytest.raises(CaseError, match="missing vulnerable/"):
         check_pair(copy)
+
+
+def test_invalid_case_json_is_a_case_error(version_dir: Path, tmp_path: Path):
+    copy = tmp_path / version_dir.parent.name / version_dir.name
+    shutil.copytree(version_dir, copy)
+    (copy / "case.json").write_text('{"variant": "fixed"}')
+    with pytest.raises(CaseError, match="case.json"):
+        load_case(copy)
+    (copy / "case.json").unlink()
+    with pytest.raises(CaseError, match="case.json"):
+        load_case(copy)

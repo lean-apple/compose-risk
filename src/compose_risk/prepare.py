@@ -8,8 +8,8 @@ from tree_sitter_language_pack import get_parser
 _PARSER = get_parser("solidity")
 
 
-class ParseError(Exception):
-    pass
+class ParseError(ValueError):
+    """Solidity source does not parse; `prepare_version` adds the file to the message."""
 
 
 def _comment_spans(source: bytes) -> list[tuple[int, int]]:

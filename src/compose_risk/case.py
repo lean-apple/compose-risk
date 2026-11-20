@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
 CASES_DIR = Path(__file__).resolve().parents[2] / "cases"
 VARIANTS = ("vulnerable", "fixed")
@@ -88,8 +88,8 @@ Case = VulnerableCase | FixedCase
 _CASE: TypeAdapter[Case] = TypeAdapter(Annotated[Case, Field(discriminator="variant")])
 
 
-class CaseError(Exception):
-    pass
+class CaseError(ValueError):
+    """A case folder or its `case.json` is invalid; the message names the case."""
 
 
 def find_case_dirs(root: Path = CASES_DIR) -> list[Path]:
@@ -103,8 +103,15 @@ def find_version_dirs(root: Path = CASES_DIR) -> list[Path]:
 
 
 def load_case(version_dir: Path) -> Case:
-    """Reads `<case>/<variant>/case.json`, validates it, and checks that every file it names exists."""
-    case = _CASE.validate_json((version_dir / "case.json").read_bytes())
+    """Reads `<case>/<variant>/case.json`, validates it, and checks that every file it names exists.
+
+    Raises `CaseError` for every problem with the case, including a missing or invalid `case.json`.
+    """
+    path = version_dir / "case.json"
+    try:
+        case = _CASE.validate_json(path.read_bytes())
+    except (OSError, ValidationError) as e:
+        raise CaseError(f"{path}: {e}") from e
     name = version_dir.parent.name
     if case.id != name:
         raise CaseError(f"{name}: id is {case.id!r}, expected the case folder name")
