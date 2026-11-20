@@ -1,10 +1,20 @@
 import json
 import shutil
 from pathlib import Path
+from typing import get_args
 
 import pytest
 
-from compose_risk.case import CaseError, check_pair, find_case_dirs, find_version_dirs, load_case
+from compose_risk.case import (
+    BASELINE_POWERS,
+    CAPITAL,
+    Attacker,
+    CaseError,
+    check_pair,
+    find_case_dirs,
+    find_version_dirs,
+    load_case,
+)
 
 
 def test_every_case_loads(version_dir: Path) -> None:
@@ -94,3 +104,9 @@ def test_variant_must_match_folder(version_dir: Path, tmp_path: Path) -> None:
     shutil.copytree(version_dir, copy)
     with pytest.raises(CaseError, match="expected the version folder name"):
         load_case(copy)
+
+
+def test_attacker_vocabulary_matches_the_schema() -> None:
+    fields = Attacker.model_fields
+    assert set(BASELINE_POWERS) == set(get_args(fields["baseline"].annotation))
+    assert set(CAPITAL) == set(get_args(fields["capital"].annotation))

@@ -52,7 +52,7 @@ def comment_count(source: str) -> int:
 
 def _stripped(source: Path) -> str:
     try:
-        return strip_comments(source.read_text())
+        return strip_comments(source.read_text(encoding="utf-8"))
     except ParseError as e:
         raise ParseError(f"{source}: {e}") from e
 
@@ -76,5 +76,5 @@ def prepare_version(version_dir: Path, out_dir: Path) -> Path:
     for relative_path, content in contracts:
         target = out_dir / "layers" / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(content)
+        target.write_text(content, encoding="utf-8")
     return out_dir

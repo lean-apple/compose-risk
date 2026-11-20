@@ -1,5 +1,6 @@
 """Schema of `case.json`, the expected answer for one version of a case."""
 
+from datetime import date
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -59,7 +60,7 @@ class VulnerableCase(_Strict):
     variant: Literal["vulnerable"]
     expected_verdict: Literal["exploitable"]
     threat_model: ThreatModel
-    incident_date: str
+    incident_date: date
     propagation_type: Literal["composition"]
     vuln_type: str
     vuln_contract: str
