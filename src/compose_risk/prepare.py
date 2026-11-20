@@ -54,18 +54,15 @@ def prepare_version(version_dir: Path, out_dir: Path) -> Path:
     """Writes `out_dir/layers/` with every layer contract of `version_dir`, comments stripped.
 
     Only `layers/` is copied: the exploit and `case.json` hold the answer. An existing `out_dir` is replaced.
-    Invalid paths, missing contracts, and parse errors are rejected before replacing output.
+    Every contract is read and parsed first, so an invalid source leaves the existing output untouched.
     """
-    if version_dir.resolve().is_relative_to(out_dir.resolve()):
-        raise ValueError("output directory must not equal or contain the source version directory")
-    if not version_dir.is_dir():
-        raise NotADirectoryError(f"source version directory does not exist or is not a directory: {version_dir}")
+    source_dir, target_dir = version_dir.resolve(), out_dir.resolve()
+    if source_dir.is_relative_to(target_dir) or target_dir.is_relative_to(source_dir):
+        raise ValueError("output directory must not overlap the source version directory")
     layers = version_dir / "layers"
-    if not layers.is_dir():
-        raise NotADirectoryError(f"source layers directory does not exist or is not a directory: {layers}")
     sources = sorted(source for source in layers.rglob("*.sol") if source.is_file())
     if not sources:
-        raise ValueError(f"no Solidity contracts found in {layers}")
+        raise FileNotFoundError(f"no Solidity contracts found in {layers}")
     contracts = [(source.relative_to(layers), strip_comments(source.read_text())) for source in sources]
     if out_dir.exists():
         shutil.rmtree(out_dir)
