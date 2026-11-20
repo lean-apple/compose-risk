@@ -6,6 +6,8 @@
 
 Each contract is correct on its own. Together, the pool trusts collateral whose supply depends on a single verifier two layers away, so one compromised verifier can mint unbacked tokens and borrow every lender's ETH.
 
+`vulnerable/` is the system as described, with an exploit that drains the pool. `fixed/` changes only `EndpointConfig.sol` to require two independent verifiers, and the same attack is rejected.
+
 ## What happened
 
 On April 18, 2026, KelpDAO's rsETH route on LayerZero relied on a single verifier. By tampering with the RPC data that verifier read and taking down an external RPC provider, the attacker got it to attest a forged message, and the Ethereum adapter released 116,500 rsETH with nothing burned on the source chain. The attacker deposited 89,567 of them on Aave and borrowed about $190M of ETH, leaving Aave with an estimated $124M to $230M of bad debt and a rush of withdrawals. The mock mints new tokens where the real adapter released existing ones; the trust gap is the same.

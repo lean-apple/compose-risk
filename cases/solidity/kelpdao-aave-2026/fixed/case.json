@@ -1,7 +1,7 @@
 {
-  "id": "kelpdao-aave-2026-safe",
-  "kind": "incident-mock-safe",
-  "expected_verdict": "safe",
+  "id": "kelpdao-aave-2026",
+  "variant": "fixed",
+  "expected_verdict": "not_exploitable",
   "threat_model": {
     "attacker": {
       "baseline": "permissionless",
@@ -30,9 +30,8 @@
       "How the attacker obtains that verifier capability; only its effect, one verifier attesting arbitrary messages, is modelled.",
       "Economic effects such as bank runs, and gas or denial-of-service griefing against these contracts."
     ],
-    "safe_means": "Given independently operated verifiers, no sequence of transactions by this attacker mints unbacked collateral or makes the protocol under review lose lender funds."
+    "property": "Given independently operated verifiers, no sequence of transactions by this attacker mints unbacked collateral or makes the protocol under review lose lender funds."
   },
-  "risky_counterpart": "kelpdao-aave-2026",
   "difference": {
     "layer": "2-upstream",
     "file": "EndpointConfig.sol",

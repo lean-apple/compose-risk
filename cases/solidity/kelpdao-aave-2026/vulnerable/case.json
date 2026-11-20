@@ -1,9 +1,7 @@
 {
   "id": "kelpdao-aave-2026",
-  "kind": "incident-mock",
-  "incident_date": "2026-04-18",
-  "propagation_type": "composition",
-  "expected_verdict": "risky",
+  "variant": "vulnerable",
+  "expected_verdict": "exploitable",
   "threat_model": {
     "attacker": {
       "baseline": "permissionless",
@@ -32,8 +30,10 @@
       "How the attacker obtains that verifier capability; only its effect, one verifier attesting arbitrary messages, is modelled.",
       "Economic effects such as bank runs, and gas or denial-of-service griefing against these contracts."
     ],
-    "safe_means": "Given independently operated verifiers, no sequence of transactions by this attacker mints unbacked collateral or makes the protocol under review lose lender funds."
+    "property": "Given independently operated verifiers, no sequence of transactions by this attacker mints unbacked collateral or makes the protocol under review lose lender funds."
   },
+  "incident_date": "2026-04-18",
+  "propagation_type": "composition",
   "vuln_type": "unbacked_collateral",
   "vuln_contract": "LendingPool",
   "vuln_function": "borrow",
@@ -70,6 +70,5 @@
     "Amounts are illustrative, not the incident's",
     "The attacker's capability is modelled as a controlled verifier key. LayerZero's incident report describes tampered RPC responses and a denial of service on an external RPC provider that led the single verifier to attest a forged message; that upstream compromise is abstracted away (https://layerzero.network/blog/layerzero-labs-kelpdao-incident-report).",
     "The mock token mints new tokens when a message is delivered. In the incident the Ethereum-side adapter released existing rsETH without a matching burn on the source chain, leaving remote-chain claims under-backed, so the backing deficit arose in the adapter's locked balance rather than through new supply (https://governance.aave.com/t/rseth-incident-report-april-20-2026/24580)."
-  ],
-  "safe_counterpart": "kelpdao-aave-2026-safe"
+  ]
 }
