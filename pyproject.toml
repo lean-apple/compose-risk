@@ -25,5 +25,5 @@ line-length = 120
 target-version = "py312"
 
 [tool.mypy]
-files = ["src"]
+files = ["src", "tests"]
 strict = true
