@@ -130,6 +130,42 @@ API_ERROR = {"subtype": "success", "is_error": True, "terminal_reason": "api_err
 
 
 @pytest.mark.parametrize(
+    ("message", "transient"),
+    [
+        ('API Error: 400 {"error":{"type":"invalid_request_error"}}', False),
+        ('API Error: 401 {"error":{"type":"authentication_error"}}', False),
+        ("API Error: 403 permission denied", False),
+        ("API Error: 404 model not found", False),
+        ("API Error: 413 request too large", False),
+        ("API Error: 400 invalid request mentioning ECONNRESET", False),
+        ("API Error: 408 request timeout", True),
+        ("API Error: 409 conflict", True),
+        ("API Error: 429 rate limited", True),
+        ("API Error: 500 internal server error", True),
+        ("API Error: 503 service unavailable", True),
+        ("API Error: 529 overloaded", True),
+        ('API Error: {"error":{"type":"authentication_error"}}', False),
+        ('API Error: {"error":{"type":"rate_limit_error"}}', True),
+        ('API Error: {"error":{"type":"overloaded_error"}}', True),
+        ('API Error: {"error":{"type":"api_error"}}', True),
+        ("API Error: ENOTFOUND", True),
+        ("API Error: ECONNRESET", True),
+        ("API Error: Connection error.", True),
+        ("API Error: Request timed out.", True),
+        ("API Error: unknown failure", False),
+    ],
+)
+@pytest.mark.parametrize("exit_code", [0, 1])
+def test_api_errors_retry_only_known_transient_failures(
+    tmp_path: Path, message: str, transient: bool, exit_code: int
+) -> None:
+    script = _fake_claude(tmp_path, {"result": {**API_ERROR, "result": message}, "exit": exit_code})
+    with pytest.raises(ClaudeCodeError, match="could not complete the API call") as raised:
+        _generate(script)
+    assert ClaudeCodeAPI("sonnet", executable=str(script)).should_retry(raised.value) is transient
+
+
+@pytest.mark.parametrize(
     ("reply", "transient"),
     [
         ({"result": API_ERROR, "exit": 1}, True),

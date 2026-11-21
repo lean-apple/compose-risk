@@ -8,6 +8,7 @@ model sees only the messages Inspect sends. Use it as `--model claude-code/<mode
 import asyncio
 import json
 import os
+import re
 import shutil
 import signal
 import tempfile
@@ -64,6 +65,28 @@ class TransientError(ClaudeCodeError):
 
 class UnsupportedSettingError(ClaudeCodeError):
     """A generation setting was requested that `claude -p` cannot apply."""
+
+
+def _retryable_api_error(message: str) -> bool:
+    """Recognize temporary API/transport failures; unknown errors must fail rather than retry forever."""
+    detail = message.removeprefix("API Error:").strip()
+    status = re.match(r"(\d{3})\b", detail)
+    if status:
+        code = int(status[1])
+        return code in {408, 409, 429} or 500 <= code < 600
+    try:
+        payload = json.loads(detail)
+    except json.JSONDecodeError:
+        payload = None
+    if isinstance(payload, dict):
+        error = payload.get("error", payload)
+        return isinstance(error, dict) and error.get("type") in {"rate_limit_error", "overloaded_error", "api_error"}
+    return bool(
+        re.fullmatch(
+            r"(?:ENOTFOUND|EAI_AGAIN|ECONNRESET|ECONNREFUSED|ETIMEDOUT|EPIPE|Connection error\.?|Request timed out\.?)",
+            detail,
+        )
+    )
 
 
 def cli_effort(config: GenerateConfig) -> str | None:
@@ -229,7 +252,9 @@ class ClaudeCodeAPI(ModelAPI):
             result = None
         # The CLI exits non-zero on API errors too, with the reason in its JSON result.
         if isinstance(result, dict) and result.get("terminal_reason") == "api_error":
-            raise TransientError(f"claude -p could not complete the API call: {result.get('result')}")
+            message = str(result.get("result", ""))
+            error_type = TransientError if _retryable_api_error(message) else ClaudeCodeError
+            raise error_type(f"claude -p could not complete the API call: {message}")
         if process.returncode != 0:
             raise ClaudeCodeError(
                 f"claude -p exited with {process.returncode}: {stderr.decode().strip() or stdout.decode().strip()}"
