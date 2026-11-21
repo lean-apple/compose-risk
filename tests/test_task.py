@@ -20,9 +20,9 @@ def _accuracy(reply: str, log_dir: Path, stop_reason: str = "stop") -> dict[str,
     """Runs the KelpDAO pair against a mock model that always gives `reply`, and returns accuracy per score."""
     output = ModelOutput.from_content("mockllm", reply, stop_reason=stop_reason)  # type: ignore[arg-type]
     model = get_model("mockllm/model", custom_outputs=lambda *_: output)
-    [log] = eval(compose_risk(cases="kelpdao-aave-2026"), model=model, log_dir=str(log_dir), display="none")
+    [log] = eval(compose_risk(cases="2026-04-18-kelpdao-aave"), model=model, log_dir=str(log_dir), display="none")
     assert log.status == "success" and log.results is not None, log.error
-    assert {s.id for s in log.samples or []} == {"kelpdao-aave-2026/vulnerable", "kelpdao-aave-2026/fixed"}
+    assert {s.id for s in log.samples or []} == {"2026-04-18-kelpdao-aave/vulnerable", "2026-04-18-kelpdao-aave/fixed"}
     return {s.name: s.metrics["accuracy"].value for s in log.results.scores}
 
 
@@ -48,6 +48,6 @@ def test_unknown_cases_are_rejected() -> None:
 
 
 def test_cases_filter_takes_a_list_or_commas() -> None:
-    ids = {"kelpdao-aave-2026/vulnerable", "kelpdao-aave-2026/fixed"}
-    assert {str(s.id) for s in compose_risk(cases="kelpdao-aave-2026").dataset} == ids
-    assert {str(s.id) for s in compose_risk(cases=["kelpdao-aave-2026"]).dataset} == ids
+    ids = {"2026-04-18-kelpdao-aave/vulnerable", "2026-04-18-kelpdao-aave/fixed"}
+    assert {str(s.id) for s in compose_risk(cases="2026-04-18-kelpdao-aave").dataset} == ids
+    assert {str(s.id) for s in compose_risk(cases=["2026-04-18-kelpdao-aave"]).dataset} == ids
