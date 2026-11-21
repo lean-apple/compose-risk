@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import math
 import stat
 import sys
 from pathlib import Path
@@ -101,6 +102,28 @@ def _generate(script: Path, timeout: float = 30) -> object:
     api = ClaudeCodeAPI("sonnet", executable=str(script), timeout=timeout)
     messages: list[ChatMessage] = [ChatMessageSystem(content="system"), ChatMessageUser(content="review this")]
     return asyncio.run(api.generate(messages, [], "none", GenerateConfig()))
+
+
+def test_cli_refusals_are_excluded_from_accuracy(tmp_path: Path) -> None:
+    script = _fake_claude(
+        tmp_path,
+        {"result": {"subtype": "success", "is_error": False, "stop_reason": "refusal", "result": "I cannot help."}},
+    )
+    [log] = eval(
+        compose_risk(cases="kelpdao-aave-2026"),
+        model="claude-code/sonnet",
+        model_args={"executable": str(script)},
+        log_dir=str(tmp_path / "logs"),
+        display="none",
+    )
+    assert log.status == "success" and log.results is not None, log.error
+    assert log.samples is not None and len(log.samples) == 2
+    for sample in log.samples:
+        assert sample.output.stop_reason == "content_filter"
+        assert sample.output.completion == "I cannot help."
+    accuracy = {s.name: s.metrics["accuracy"].value for s in log.results.scores}
+    assert accuracy["refused"] == 1.0
+    assert math.isnan(accuracy["verdict_correct"]) and math.isnan(accuracy["root_cause_layer_correct"])
 
 
 @pytest.mark.parametrize(

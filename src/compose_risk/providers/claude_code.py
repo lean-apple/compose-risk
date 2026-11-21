@@ -140,7 +140,11 @@ def model_output(result: dict[str, Any], requested_model: str) -> ModelOutput:
     content = json.dumps(structured) if structured is not None else result.get("result", "")
     # `modelUsage` is keyed by the concrete model that answered (e.g. claude-opus-5-5).
     models = sorted(result.get("modelUsage") or {})
-    output = ModelOutput.from_content(model=",".join(models) or requested_model, content=content)
+    output = ModelOutput.from_content(
+        model=",".join(models) or requested_model,
+        content=content,
+        stop_reason="content_filter" if result.get("stop_reason") == "refusal" else "stop",
+    )
     usage = result.get("usage")
     if usage is not None:
         input_tokens = usage.get("input_tokens", 0)
