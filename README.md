@@ -27,6 +27,14 @@ uv run pytest
 uv run mypy
 ```
 
+Run the eval with [Inspect](https://inspect.aisi.org.uk/), through the local [Claude Code](https://claude.com/claude-code) login or the Anthropic API (`ANTHROPIC_API_KEY` in `.env`):
+
+```
+uv run inspect eval src/compose_risk/task.py --model claude-code/sonnet
+uv run inspect eval src/compose_risk/task.py --model anthropic/claude-sonnet-5-5 -T cases=kelpdao-aave-2026
+uv run inspect view
+```
+
 ## License
 
 Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT license](LICENSE-MIT), at your option.
