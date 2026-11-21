@@ -8,6 +8,7 @@ import pytest
 from compose_risk.case import (
     BASELINE_POWERS,
     CAPITAL,
+    CASES_DIR,
     Attacker,
     CaseError,
     check_pair,
@@ -103,6 +104,17 @@ def test_variant_must_match_folder(version_dir: Path, tmp_path: Path) -> None:
     copy = tmp_path / version_dir.parent.name / other
     shutil.copytree(version_dir, copy)
     with pytest.raises(CaseError, match="expected the version folder name"):
+        load_case(copy)
+
+
+def test_id_must_start_with_incident_date(tmp_path: Path) -> None:
+    [vulnerable, *_] = (d for d in find_version_dirs(CASES_DIR) if d.name == "vulnerable")
+    copy = tmp_path / vulnerable.parent.name / vulnerable.name
+    shutil.copytree(vulnerable, copy)
+    data = json.loads((copy / "case.json").read_text())
+    data["incident_date"] = "1999-01-01"
+    (copy / "case.json").write_text(json.dumps(data))
+    with pytest.raises(CaseError, match="id must start with the incident date 1999-01-01"):
         load_case(copy)
 
 
