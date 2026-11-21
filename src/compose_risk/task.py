@@ -47,11 +47,14 @@ def review_all_layers() -> Solver:
 
 
 @task
-def compose_risk(cases: str | None = None) -> Task:
-    """Does the reviewer give the right verdict and root-cause layer? `cases` filters by case id, comma-separated."""
+def compose_risk(cases: str | list[str] | None = None) -> Task:
+    """Does the reviewer give the right verdict and root-cause layer?
+
+    `cases` filters by case id: a list, or ids separated by commas. `-T cases=a,b` on the command line gives a list.
+    """
     version_dirs = find_version_dirs(CASES_DIR)
     if cases is not None:
-        wanted = set(cases.split(","))
+        wanted = set(cases.split(",") if isinstance(cases, str) else cases)
         unknown = wanted - {d.parent.name for d in version_dirs}
         if unknown:
             raise ValueError(f"unknown case(s): {', '.join(sorted(unknown))}")

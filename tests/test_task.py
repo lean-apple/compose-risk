@@ -45,3 +45,9 @@ def test_a_refusal_is_counted_apart(tmp_path: Path) -> None:
 def test_unknown_cases_are_rejected() -> None:
     with pytest.raises(ValueError, match="unknown case"):
         compose_risk(cases="no-such-case")
+
+
+def test_cases_filter_takes_a_list_or_commas() -> None:
+    ids = {"kelpdao-aave-2026/vulnerable", "kelpdao-aave-2026/fixed"}
+    assert {str(s.id) for s in compose_risk(cases="kelpdao-aave-2026").dataset} == ids
+    assert {str(s.id) for s in compose_risk(cases=["kelpdao-aave-2026"]).dataset} == ids
