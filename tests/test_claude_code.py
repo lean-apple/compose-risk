@@ -11,7 +11,13 @@ import pytest
 from inspect_ai import eval
 from inspect_ai.model import ChatMessage, ChatMessageSystem, ChatMessageUser, GenerateConfig
 
-from compose_risk.providers.claude_code import ClaudeCodeAPI, ClaudeCodeError, UnsupportedSettingError, cli_effort
+from compose_risk.providers.claude_code import (
+    ClaudeCodeAPI,
+    ClaudeCodeError,
+    TransientError,
+    UnsupportedSettingError,
+    cli_effort,
+)
 from compose_risk.task import compose_risk
 from compose_risk.verdict import ReviewVerdict
 
@@ -118,3 +124,23 @@ def test_settings_the_cli_cannot_apply_are_rejected() -> None:
         cli_effort(GenerateConfig(temperature=0.5))
     with pytest.raises(UnsupportedSettingError, match="no level"):
         cli_effort(GenerateConfig(reasoning_effort="minimal"))
+
+
+API_ERROR = {"subtype": "success", "is_error": True, "terminal_reason": "api_error", "result": "API Error: ENOTFOUND"}
+
+
+@pytest.mark.parametrize(
+    ("reply", "transient"),
+    [
+        ({"result": API_ERROR, "exit": 1}, True),
+        ({"result": SUCCESS, "sleep": 5}, True),
+        ({"result": {}, "exit": 1}, False),
+        ({"result": {"subtype": "error_max_turns", "is_error": True}}, False),
+    ],
+)
+def test_only_transient_failures_are_retried(tmp_path: Path, reply: dict[str, object], transient: bool) -> None:
+    script = _fake_claude(tmp_path, reply)
+    with pytest.raises(ClaudeCodeError) as raised:
+        _generate(script, timeout=1)
+    assert isinstance(raised.value, TransientError) is transient
+    assert ClaudeCodeAPI("sonnet", executable=str(script)).should_retry(raised.value) is transient

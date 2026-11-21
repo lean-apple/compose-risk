@@ -58,6 +58,10 @@ class ClaudeCodeError(Exception):
     """`claude -p` failed, timed out, or returned an error result."""
 
 
+class TransientError(ClaudeCodeError):
+    """`claude -p` timed out or could not reach the API, such as after sleep or a network drop; Inspect retries it."""
+
+
 class UnsupportedSettingError(ClaudeCodeError):
     """A generation setting was requested that `claude -p` cannot apply."""
 
@@ -179,6 +183,9 @@ class ClaudeCodeAPI(ModelAPI):
     def max_connections(self) -> int:
         return DEFAULT_MAX_CONNECTIONS
 
+    def should_retry(self, ex: Exception) -> bool:
+        return isinstance(ex, TransientError)
+
     async def generate(
         self,
         input: list[ChatMessage],
@@ -210,20 +217,25 @@ class ClaudeCodeAPI(ModelAPI):
                 stdout, stderr = await asyncio.wait_for(process.communicate(prompt.encode()), self.timeout)
             except TimeoutError:
                 await _terminate(process)
-                raise ClaudeCodeError(f"claude -p timed out after {self.timeout:.0f}s") from None
+                raise TransientError(f"claude -p timed out after {self.timeout:.0f}s") from None
             except BaseException:
                 # Cancellation or any other interruption: never leave the CLI running.
                 await _terminate(process)
                 raise
 
+        try:
+            result = json.loads(stdout)
+        except json.JSONDecodeError:
+            result = None
+        # The CLI exits non-zero on API errors too, with the reason in its JSON result.
+        if isinstance(result, dict) and result.get("terminal_reason") == "api_error":
+            raise TransientError(f"claude -p could not complete the API call: {result.get('result')}")
         if process.returncode != 0:
             raise ClaudeCodeError(
                 f"claude -p exited with {process.returncode}: {stderr.decode().strip() or stdout.decode().strip()}"
             )
-        try:
-            result = json.loads(stdout)
-        except json.JSONDecodeError as ex:
-            raise ClaudeCodeError(f"claude -p did not print JSON: {stdout.decode()[:500]}") from ex
+        if not isinstance(result, dict):
+            raise ClaudeCodeError(f"claude -p did not print JSON: {stdout.decode()[:500]}")
         if result.get("is_error") or result.get("subtype") != "success":
             raise ClaudeCodeError(f"claude -p returned an error: {result.get('subtype')}: {result.get('result')}")
         return model_output(result, self.model_name)
