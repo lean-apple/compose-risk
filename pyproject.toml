@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.entry-points.inspect_ai]
-compose_risk = "compose_risk._registry"
+compose_risk = "compose_risk.providers.claude_code"
 
 [dependency-groups]
 dev = [
