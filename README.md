@@ -51,6 +51,17 @@ On 2026-11-21, each model reviewed both versions of `2026-04-18-kelpdao-aave` ov
 
 Every model solves the pair: it flags the vulnerable version and clears the fixed one in the same epoch, which a reviewer that always answers "exploitable" never does. All four read the same 25,398 input tokens. Haiku uses the most output tokens and Opus the fewest, and the gap is reasoning: Haiku spends eight times as many reasoning tokens as Opus, while the rest of the output stays between 2,750 and 3,194 tokens for every model. With one case and six samples per model, these numbers show that the eval works end to end; they do not rank the models.
 
+Each model also reviewed both versions of `2025-06-26-resupplyfi` over three epochs through the Anthropic API.
+
+| Model | Verdict | Root-cause layer | Refused | Output tokens | Of which reasoning | Time |
+| --- | --- | --- | --- | --- | --- | --- |
+| `claude-haiku-5-5` | 6/6 | 0/3 | 0/6 | 93,338 | 90,664 | 1 min 59 s |
+| `claude-sonnet-5-5` | 6/6 | 0/3 | 0/6 | 26,188 | 22,823 | 1 min 1 s |
+| `claude-opus-5-5` | 5/5 | 0/2 | 1/6 | 10,485 | 7,564 | 22 s |
+| `claude-fable-5-2` | 2/2 | | 4/6 | 11,212 | 10,175 | 1 min 4 s |
+
+Every answered review gets the verdict right, so the models also clear the fixed version, whose vault is still empty. None names the expected root cause, yet every answered vulnerable review traces the same chain: the donation raises the share price past 1e36, the oracle passes it through, `1e36 / price` floors to zero and any loan passes. Haiku and Sonnet place the root cause in the vault, where the donation enters, and Opus in the pair, where the division rounds; none places it in the oracle that connects them, which is where the fixed version adds its bound. The scores show the limit of naming a single layer for a risk that lives between two. Opus refused one review and Fable four, all through the API's cybersecurity safety classifier; refusals are counted apart and left out of the accuracy columns. This case also takes far more reasoning than KelpDAO: Haiku spends 90,664 reasoning tokens here against 5,043 there.
+
 ## Limitations
 
 The scorer checks only the verdict and the root-cause layer. The model's explanation and propagation path are kept in the logs but not graded, so a right verdict reached for the wrong reason still scores. The cases are small and rebuilt from public incidents, so a right answer may come from recognizing the incident or from spotting the one changed value rather than from reasoning across layers; the results do not yet separate these.
