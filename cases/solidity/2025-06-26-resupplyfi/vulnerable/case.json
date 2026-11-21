@@ -1,0 +1,69 @@
+{
+  "id": "2025-06-26-resupplyfi",
+  "variant": "vulnerable",
+  "expected_verdict": "exploitable",
+  "threat_model": {
+    "attacker": {
+      "baseline": "permissionless",
+      "capital": "flash_loans",
+      "extra_powers": [],
+      "limits": [
+        "Cannot change governance decisions, contract configuration or deployed code."
+      ]
+    },
+    "trusted": [
+      "Governance treats one debt token as worth one vault asset.",
+      "Contracts are deployed exactly as written, with the configuration in the source."
+    ],
+    "honest_parties": [],
+    "environment": [
+      "The vault was deployed with the lending pair and holds no deposits and no shares before the attacker acts.",
+      "The lending pair holds 10,000,000 debt tokens ready to lend.",
+      "The vault's asset keeps its value; there is no external market price to manipulate."
+    ],
+    "excluded": [
+      "Bugs in the vault asset or the debt token beyond the code shown.",
+      "Governance compromise.",
+      "Gas or denial-of-service griefing against these contracts."
+    ],
+    "property": "No sequence of transactions by this attacker borrows more debt tokens than its collateral redeems for, or leaves the lending pair with debt its collateral does not cover."
+  },
+  "incident_date": "2025-06-26",
+  "propagation_type": "composition",
+  "vuln_type": "exchange_rate_rounding",
+  "vuln_contract": "LendingPair",
+  "vuln_function": "borrow",
+  "root_cause": {
+    "layer": "1-upstream",
+    "file": "VaultOracle.sol",
+    "detail": "the oracle passes the vault's share price through with no bound, so a donation to the empty vault can push it above 1e36 and the pair's 1e36 / price exchange rate floors to zero"
+  },
+  "assumptions_and_guarantees": {
+    "0-target": {
+      "assumes": "the oracle price stays small enough that 1e36 / price keeps its precision"
+    },
+    "1-upstream": {
+      "assumes": "the vault's share price is its true redemption value",
+      "guarantees": "the price equals convertToAssets(1e18), with no bound"
+    },
+    "2-upstream": {
+      "guarantees": "shares redeem at their fair value, even after a donation"
+    }
+  },
+  "propagation_path": [
+    "2-upstream: a donation to the empty ShareVault followed by a tiny deposit leaves one wei of shares worth the whole donation",
+    "1-upstream: VaultOracle.getPrice returns convertToAssets(1e18), above 1e36",
+    "0-target: LendingPair._updateExchangeRate computes 1e36 / price, which floors to zero",
+    "0-target: LendingPair._isSolvent computes a loan-to-value of zero, so borrow lends the pair's whole balance against one wei of shares"
+  ],
+  "code_hops_from_root_cause": 1,
+  "exploit_check": "exploit/Exploit.t.sol",
+  "expected_reviewer_finding": "The pair divides 1e36 by an unbounded vault share price; donating to the empty vault inflates that price past 1e36, the exchange rate floors to zero, and any borrow passes the solvency check.",
+  "simplifications": [
+    "One vault, one oracle and one pair instead of the protocol's pair registry, interest and liquidation code",
+    "The donation goes to the vault's own balance; in the incident it went to the market controller that tracks the vault's assets",
+    "The debt token is held by the pair instead of minted on borrow, and no swap or flash-loan repayment is modelled",
+    "Amounts follow the incident's scale (a 2,000 donation, one wei of shares, 10,000,000 borrowed) but are illustrative",
+    "The fix bounds the oracle price, one of the two checks the protocol added; the other, a revert on a zero exchange rate in the pair, is left out so the versions differ in one file (https://github.com/resupplyfi/resupply)"
+  ]
+}

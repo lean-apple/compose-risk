@@ -10,6 +10,7 @@ A case comes in two versions: a vulnerable one with an exploit that proves the r
 
 | Case | Incident | Root cause |
 | --- | --- | --- |
+| [`2025-06-26-resupplyfi`](cases/solidity/2025-06-26-resupplyfi) | ResupplyFi crvUSD/wstUSR market, June 2025 | an oracle passes an unbounded vault share price to a pair that divides 1e36 by it, one layer below the pair |
 | [`2026-04-18-kelpdao-aave`](cases/solidity/2026-04-18-kelpdao-aave) | KelpDAO rsETH bridge, April 2026 | one verifier is enough to deliver a message, two layers below the lending pool |
 
 ## Usage

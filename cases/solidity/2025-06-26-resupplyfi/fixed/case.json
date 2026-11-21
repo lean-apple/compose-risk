@@ -1,0 +1,38 @@
+{
+  "id": "2025-06-26-resupplyfi",
+  "variant": "fixed",
+  "expected_verdict": "not_exploitable",
+  "threat_model": {
+    "attacker": {
+      "baseline": "permissionless",
+      "capital": "flash_loans",
+      "extra_powers": [],
+      "limits": [
+        "Cannot change governance decisions, contract configuration or deployed code."
+      ]
+    },
+    "trusted": [
+      "Governance treats one debt token as worth one vault asset.",
+      "Contracts are deployed exactly as written, with the configuration in the source."
+    ],
+    "honest_parties": [],
+    "environment": [
+      "The vault was deployed with the lending pair and holds no deposits and no shares before the attacker acts.",
+      "The lending pair holds 10,000,000 debt tokens ready to lend.",
+      "The vault's asset keeps its value; there is no external market price to manipulate."
+    ],
+    "excluded": [
+      "Bugs in the vault asset or the debt token beyond the code shown.",
+      "Governance compromise.",
+      "Gas or denial-of-service griefing against these contracts."
+    ],
+    "property": "No sequence of transactions by this attacker borrows more debt tokens than its collateral redeems for, or leaves the lending pair with debt its collateral does not cover."
+  },
+  "difference": {
+    "layer": "1-upstream",
+    "file": "VaultOracle.sol",
+    "detail": "the oracle rejects a share price of 1e22 or more, so the exchange rate keeps at least fourteen digits of precision"
+  },
+  "exploit_check": "exploit/Exploit.t.sol",
+  "expected_reviewer_finding": "No exploitable risk: the oracle bounds the share price, so the exchange rate cannot floor to zero and borrowing stays limited by the collateral's redemption value, even with an empty vault."
+}
