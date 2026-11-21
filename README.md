@@ -10,14 +10,14 @@ A case comes in two versions: a vulnerable one with an exploit that proves the r
 
 | Case | Incident | Root cause |
 | --- | --- | --- |
-| [`kelpdao-aave-2026`](cases/solidity/kelpdao-aave-2026) | KelpDAO rsETH bridge, April 2026 | one verifier is enough to deliver a message, two layers below the lending pool |
+| [`2026-04-18-kelpdao-aave`](cases/solidity/2026-04-18-kelpdao-aave) | KelpDAO rsETH bridge, April 2026 | one verifier is enough to deliver a message, two layers below the lending pool |
 
 ## Usage
 
 Each version compiles on its own. Run its exploit with [Foundry](https://getfoundry.sh/):
 
 ```
-FOUNDRY_SRC=cases/solidity/kelpdao-aave-2026/vulnerable/layers FOUNDRY_TEST=cases/solidity/kelpdao-aave-2026/vulnerable/exploit forge test
+FOUNDRY_SRC=cases/solidity/2026-04-18-kelpdao-aave/vulnerable/layers FOUNDRY_TEST=cases/solidity/2026-04-18-kelpdao-aave/vulnerable/exploit forge test
 ```
 
 Check the cases, the review input and the scoring with [uv](https://docs.astral.sh/uv/):
@@ -31,7 +31,7 @@ Run the eval with [Inspect](https://inspect.aisi.org.uk/), through the local [Cl
 
 ```
 uv run inspect eval src/compose_risk/task.py --model claude-code/sonnet
-uv run inspect eval src/compose_risk/task.py --model anthropic/claude-sonnet-5-5 -T cases=kelpdao-aave-2026
+uv run inspect eval src/compose_risk/task.py --model anthropic/claude-sonnet-5-5 -T cases=2026-04-18-kelpdao-aave
 uv run inspect view
 ```
 

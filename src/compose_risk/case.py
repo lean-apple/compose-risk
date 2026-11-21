@@ -121,6 +121,9 @@ def load_case(version_dir: Path) -> Case:
     name = version_dir.parent.name
     if case.id != name:
         raise CaseError(f"{name}: id is {case.id!r}, expected the case folder name")
+    # The fixed version's date is checked through the pair, which must share the id.
+    if isinstance(case, VulnerableCase) and not case.id.startswith(f"{case.incident_date}-"):
+        raise CaseError(f"{name}: id must start with the incident date {case.incident_date}")
     if case.variant != version_dir.name:
         raise CaseError(f"{name}: variant is {case.variant!r}, expected the version folder name")
     named = case.root_cause if isinstance(case, VulnerableCase) else case.difference

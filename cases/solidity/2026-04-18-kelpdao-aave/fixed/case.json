@@ -1,5 +1,5 @@
 {
-  "id": "kelpdao-aave-2026",
+  "id": "2026-04-18-kelpdao-aave",
   "variant": "fixed",
   "expected_verdict": "not_exploitable",
   "threat_model": {

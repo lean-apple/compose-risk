@@ -69,7 +69,7 @@ def test_runs_the_eval_through_an_isolated_cli(tmp_path: Path, monkeypatch: pyte
     script = _fake_claude(tmp_path, {"result": SUCCESS})
 
     [log] = eval(
-        compose_risk(cases="kelpdao-aave-2026"),
+        compose_risk(cases="2026-04-18-kelpdao-aave"),
         model="claude-code/sonnet",
         model_args={"executable": str(script)},
         log_dir=str(tmp_path / "logs"),
@@ -110,7 +110,7 @@ def test_cli_refusals_are_excluded_from_accuracy(tmp_path: Path) -> None:
         {"result": {"subtype": "success", "is_error": False, "stop_reason": "refusal", "result": "I cannot help."}},
     )
     [log] = eval(
-        compose_risk(cases="kelpdao-aave-2026"),
+        compose_risk(cases="2026-04-18-kelpdao-aave"),
         model="claude-code/sonnet",
         model_args={"executable": str(script)},
         log_dir=str(tmp_path / "logs"),

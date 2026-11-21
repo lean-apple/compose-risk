@@ -4,7 +4,7 @@ from compose_risk.case import VulnerableCase, check_pair, load_case
 from compose_risk.prepare import read_layers
 from compose_risk.prompt import review_input
 
-KELPDAO = Path(__file__).resolve().parent.parent / "cases" / "solidity" / "kelpdao-aave-2026"
+KELPDAO = Path(__file__).resolve().parent.parent / "cases" / "solidity" / "2026-04-18-kelpdao-aave"
 
 
 def test_input_holds_every_layer_without_comments(version_dir: Path) -> None:
