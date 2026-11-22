@@ -60,7 +60,7 @@ Each model also reviewed both versions of `2025-06-26-resupplyfi` over three epo
 | `claude-opus-5-5` | 5/5 | 0/2 | 1/6 | 10,485 | 7,564 | 22 s |
 | `claude-fable-5-2` | 2/2 | | 4/6 | 11,212 | 10,175 | 1 min 4 s |
 
-Every answered review gets the verdict right, so the models also clear the fixed version, whose vault is still empty. None names the expected root cause, yet every answered vulnerable review traces the same chain: the donation raises the share price past 1e36, the oracle passes it through, `1e36 / price` floors to zero and any loan passes. Haiku and Sonnet place the root cause in the vault, where the donation enters, and Opus in the pair, where the division rounds; none places it in the oracle that connects them, which is where the fixed version adds its bound. The scores show the limit of naming a single layer for a risk that lives between two. Opus refused one review and Fable four, all through the API's cybersecurity safety classifier; refusals are counted apart and left out of the accuracy columns. This case also takes far more reasoning than KelpDAO: Haiku spends 90,664 reasoning tokens here against 5,043 there.
+All completed reviews give the correct verdict. Haiku and Sonnet locate the root cause in the vault, and Opus in the pair; none selects the expected oracle layer. They identify the zero-rate mechanism, but several proposed attacks contain arithmetic or token-handling errors. API-reported refusals are excluded from accuracy.
 
 ## Limitations
 
