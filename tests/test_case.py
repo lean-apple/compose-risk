@@ -65,7 +65,9 @@ def _copy(case_dir: Path, tmp_path: Path) -> Path:
 
 def test_pair_rejects_a_second_changed_contract(case_dir: Path, tmp_path: Path) -> None:
     copy = _copy(case_dir, tmp_path)
-    contract = next((copy / "fixed" / "layers").rglob("*.sol"))
+    _, fixed = check_pair(copy)
+    declared = copy / "fixed" / "layers" / fixed.difference.layer / fixed.difference.file
+    contract = next(p for p in sorted((copy / "fixed" / "layers").rglob("*.sol")) if p != declared)
     contract.write_text(contract.read_text() + "\n// drift\n")
     with pytest.raises(CaseError, match="expected only"):
         check_pair(copy)
