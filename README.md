@@ -57,10 +57,7 @@ Only the verdict and the root-cause layer are scored. The model's explanation is
 
 ## Next steps
 
-* Run on more layers. The layer scheme has no fixed depth, so a case can follow a longer chain of dependencies, which shows how far a reviewer traces a risk before it loses it.
-* Add risks that come from contracts built on top of the protocol, not only from the ones it depends on.
-* Add renamed and reworded variants of each case, to see whether models reason across layers or recognize the incident.
-* Grade the explanation, or ask for a working exploit, to check that a correct verdict comes from the right reasoning.
+The cases can grow along three axes: deeper chains of dependencies, one change reaching several consumers, and different points where a risk can be stopped. The scoring can move from a single root-cause layer toward the assumptions that break, with controls that rule out shortcuts such as recognizing the incident.
 
 ## Run it
 
