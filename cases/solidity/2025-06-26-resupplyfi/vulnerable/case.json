@@ -51,7 +51,7 @@
     }
   },
   "propagation_path": [
-    "2-upstream: a donation to the empty ShareVault followed by a tiny deposit leaves one wei of shares worth the whole donation",
+    "2-upstream: a 2,000-token donation to the empty ShareVault followed by a 3-token deposit mints one wei of shares redeemable for about 2.001 tokens after accounting for the 1,000 virtual shares",
     "1-upstream: VaultOracle.getPrice returns convertToAssets(1e18), above 1e36",
     "0-target: LendingPair._updateExchangeRate computes 1e36 / price, which floors to zero",
     "0-target: LendingPair._isSolvent computes a loan-to-value of zero, so borrow lends the pair's whole balance against one wei of shares"
