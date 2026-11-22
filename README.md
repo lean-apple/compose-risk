@@ -1,18 +1,18 @@
 # compose-risk
 
-compose-risk asks whether an AI reviewer can find a risk that only appears when contracts are combined. Each case is a small system rebuilt from a real incident, and the cases focus on mismatches between what one contract assumes and another guarantees. The reviewer reads the whole system and has to say whether it can be attacked, and where the problem starts.
+compose-risk asks whether an AI reviewer can find a risk that only appears when contracts are combined. Each case is a small system rebuilt from a real incident, built around a mismatch between what one contract assumes and what another guarantees.
 
 ## How a case is built
 
-Each system is split into layers by distance from the protocol under review: `0-target` is the protocol itself, `1-upstream` is what it calls directly, and `2-upstream` is one step further. Each layer can be correct on its own terms. In ResupplyFi the vault redeems shares at their fair value and the oracle reports exactly that value, but the lending pair assumes the price stays small enough to divide 1e36 by it, and nothing between them guarantees that.
+The contracts are split into layers by distance from the protocol under review: `0-target` is the protocol, `1-upstream` is what it calls, and `2-upstream` is one step further.
 
-Every case comes in two versions that differ in exactly one file. In the vulnerable version an exploit test shows that the attack works, and the expected verdict is `exploitable`. In the fixed version the same exploit fails, and the expected verdict is `not_exploitable`, meaning a judgment that no attack within the threat model works rather than as a proof. Both versions share a threat model that says what the attacker can do, what is trusted, and what property must hold.
+Each case has two versions that differ in one file. An exploit test succeeds on the vulnerable version and fails on the fixed one. Both versions share a threat model that states what the attacker can do and what must hold.
 
 ## How a review is scored
 
-The model sees all layers and the threat model in one prompt, and answers with a verdict and the layer it thinks holds the root cause. The verdict is scored on both versions and the root-cause layer on the vulnerable one. A reviewer that always answers `exploitable` already gets half the verdicts, so what matters is whether it flags the vulnerable version and clears the fixed one in the same run. Refusals are counted separately and left out of accuracy.
+The model reads all layers and the threat model at once, answers `exploitable` or `not_exploitable`, and names the layer that holds the root cause. The expected layer is the one the fix changes, which is a convention, since another layer can also be a reasonable answer. For the fixed version, the failing exploit supports the `not_exploitable` verdict without proving it.
 
-The expected root-cause layer is the layer of the file the fix changes. This is a convention, not the only reasonable one: in ResupplyFi the fix bounds the oracle, but a check in the pair that rejects a zero exchange rate would close the attack too, so a model that blames the pair is wrong by this rule without being wrong about the mechanism. Perhaps a layer is not the right unit, and the reviewer should name the edge instead: which layer assumes something another layer does not guarantee.
+A reviewer that always answers `exploitable` gets half the verdicts, so a useful one has to tell the two versions apart. Refusals are counted separately.
 
 ## Cases
 
